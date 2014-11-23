@@ -8,12 +8,16 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.imageio.ImageIO;
 
 import lire.ClusterSort;
+import model.Cluster;
 import model.Media;
 
 
@@ -23,12 +27,12 @@ public class ImageSimilarity {
 	private ArrayList<Media> mediaImages = new ArrayList<Media>();
 	private ArrayList<String> imageUrls = new ArrayList<String>();
 	private ArrayList<BufferedImage> imageList = new ArrayList<BufferedImage>();
+	private ArrayList<ArrayList<Cluster>> clusters = new ArrayList<ArrayList<Cluster>>();
 	
 	// Method to execute
 	public static void main(String[] args) {
 		new ImageSimilarity();
-		
-		// Implement the sorting algorithm. 
+	
 	}
 	
 	// Constructor to initiate the call to grab the data form the DB
@@ -63,8 +67,8 @@ public class ImageSimilarity {
 				//System.out.println("Image [" + i + "] is not null"); // Works
 			}
 			
-//			System.out.println("Image [" + i +"]:" + "Height = " + img.getHeight() 
-//					+ ", Width = " + img.getWidth()); // Works
+			System.out.println("Image [" + i +"]:" + "Height = " + img.getHeight() 
+					+ ", Width = " + img.getWidth()); // Works
 			
 //			System.out.println(imageUrls.get(i)); // Stored
 			imageList.add(img);
@@ -74,12 +78,31 @@ public class ImageSimilarity {
 		 * Run a quick sample app to see if code works
 		 */
 		Media initial = mediaImages.get(0);
-		new ClusterSort(imageList, initial);
+		ClusterSort clusterSort = new ClusterSort(mediaImages);
 		
-	}
-	
-	private void createLireIndex() {
-		// Use
+		/*
+		 * Grab the Cluster List
+		 */
+		clusters = clusterSort.getClusters();
+		
+		
+		// See if ArrayList is being stored properly 
+//		for (int i = 0; i < cluster.size(); i++) {
+//			System.out.println(cluster.get(i).getId());
+//		}
+		
+		/*
+		 * Make a SQL update into MediaCluster 
+		 */
+		String sqlQuery = "INSERT INTO m";
+		
+		try {
+			Statement statement = conn.createStatement();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	// Print out the results -- don't need to use this since it works
@@ -87,8 +110,8 @@ public class ImageSimilarity {
 		Iterator it = listOfMediaUrls.iterator();
 		while (it.hasNext()) {
 			Media media = (Media) it.next();
-			System.out.println("Event id: " + media.getEventId() + ", Social id: " + 
-					media.getSocialId() + ", Media URL: " + media.getMediaUrl());
+//			System.out.println("Event id: " + media.getEventId() + ", Social id: " + 
+//					media.getSocialId() + ", Media URL: " + media.getMediaUrl());
 		}
 	}
 	
@@ -102,7 +125,7 @@ public class ImageSimilarity {
 		try {
 			
 			st = conn.createStatement();
-			rs = st.executeQuery("SELECT id, event_id, social_id, media_url FROM media");
+			rs = st.executeQuery("SELECT id, event_id, social_id, media_url, created_at FROM media");
 			// st.execute("INSERT INTO media_clusters VALUES ()");
 			// SELECT id FROM MEDIA_CLUSTERS ORDER BY ID DESC LIMIT 1
 			while (rs.next()) {
@@ -111,6 +134,15 @@ public class ImageSimilarity {
 				int eventId = rs.getInt("event_id");
 				String socialId = rs.getString("social_id");
 				String mediaUrl = rs.getString("media_url");
+				Date date = rs.getTime("created_at");
+				
+				// Convert UNIX Eoch time to something readable
+				DateFormat formatter = new SimpleDateFormat("HH:mm:ss:SSS");
+				String dateFormatted = formatter.format(date);
+				
+				System.out.println(date);
+				
+				
 				
 				//System.out.println(id + ": event id: " + eventId + " ,media url: " + mediaUrl
 				//			+ "  , social id: " + socialId); // Works
@@ -119,7 +151,8 @@ public class ImageSimilarity {
 						id,
 						eventId,
 						socialId,
-						mediaUrl
+						mediaUrl,
+						date
 						);
 				imageUrls.add(mediaUrl);
 				mediaImages.add(media);

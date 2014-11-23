@@ -5,10 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import javax.imageio.ImageIO;
 
 import model.Cluster;
+import model.ClusterComparator;
 import model.Media;
 import net.semanticmetadata.lire.DocumentBuilder;
 import net.semanticmetadata.lire.DocumentBuilderFactory;
@@ -21,43 +23,75 @@ public class ClusterSort {
 	double[] fcthFeatureVector;
 	double distanceToSearchImage;
 	
-	// ArrayList of Cluster objects
-	ArrayList<Cluster> clusters = new ArrayList<Cluster>();	
+	// ArrayList of Cluster Objects
+	ArrayList<ArrayList<Cluster>> clusters = new ArrayList<ArrayList<Cluster>>();
 	
-	public ClusterSort(ArrayList<BufferedImage> images, Media media) {
+	public ClusterSort(ArrayList<Media> images) {
 		
 		// Check
 		if (images.isEmpty()) {
 			throw new RuntimeException("The media array is empty");
 		}
 		
-		double[] searchImage = getFCTHFeatureVector(images.get(0), media.getMediaUrl());
 		
 		// Loop on the arraylist
 		for (int i = 0; i < images.size(); i++) {
 			
-			// Declare an array to hold vector data
-			double[] fcthFeatureVector = getFCTHFeatureVector(images.get(i), media.getMediaUrl());
-			double distanceToSearchImage = calculateEuclideanDistance(fcthFeatureVector, searchImage);
+			double[] searchImage = getFCTHFeatureVector(images.get(i), 
+					images.get(i).getMediaUrl());
+			// Declare Cluster array
+			ArrayList<Cluster> cluster = new ArrayList<Cluster>();
 			
-			System.out.println(distanceToSearchImage);
+			for (int j = 0; j < images.size(); j++) {
+				
 			
+				// Declare an array to hold vector data
+				double[] fcthFeatureVector = getFCTHFeatureVector(images.get(j), images.get(j).getMediaUrl());
+				double distanceToSearchImage = calculateEuclideanDistance(fcthFeatureVector, searchImage);
+				
+				// Add to the Cluster ArrayList
+				Cluster obj = new Cluster(i, distanceToSearchImage, images.get(i).getTime(), images.get(i).getMediaUrl());
+				obj.setDistance(distanceToSearchImage);
+				
+				//System.out.println(obj.getTime());
+				
+				//System.out.println(distanceToSearchImage);
+				cluster.add(obj);
+			}
+			
+			Collections.sort(cluster, new ClusterComparator());
+			
+			clusters.add(cluster);
 		}
+		
+		
+		
+		// Print time to see values
+//		for (int i = 0; i < cluster.size(); i++) {
+//			System.out.println(cluster.get(i).getDistance() + " at Time: " + 
+//						cluster.get(i).getTime());
+//		}
 				
 	}
 	
-	public static double[] getFCTHFeatureVector(BufferedImage img, String url) {
+	public static double[] getFCTHFeatureVector(Media img, String url) {
 		
 		// Get the FCTH Document builder
 		DocumentBuilder builder = DocumentBuilderFactory.getFCTHDocumentBuilder();
+		
+		BufferedImage bImg = null;
 		
 		Document document = null;
 		
 		// Add it to the Lucene Document
 		try {
-			document = builder.createDocument(img, url);
+			URL imageUrl = new URL(img.getMediaUrl());
+			bImg = ImageIO.read(imageUrl);
+			document = builder.createDocument(bImg, url);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
@@ -68,7 +102,7 @@ public class ClusterSort {
 		FCTH fcthDescriptor = new FCTH();
 		
 		// Get the DoubleHistogram vector
-		return fcthDescriptor.Apply(img);
+		return fcthDescriptor.Apply(bImg);
 	}
 	
 	/*
@@ -83,6 +117,7 @@ public class ClusterSort {
 		return Math.sqrt(innerSum);
 	}
 	
-	
-
+	public ArrayList<ArrayList<Cluster>> getClusters() {
+		return clusters;
+	}
 }

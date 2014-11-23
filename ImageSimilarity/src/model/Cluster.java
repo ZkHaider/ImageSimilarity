@@ -1,15 +1,20 @@
 package model;
 
 import java.util.Comparator;
+import java.util.Date;
 
-public class Cluster implements Comparator<Cluster> {
+public class Cluster {
 
 	private int id;
-	private double distance;
+	double distance;
+	private Date time;
+	private String url;
 
-	public Cluster(int id, double distance) {
+	public Cluster(int id, double distance, Date time, String url) {
 		this.id = id;
 		this.distance = distance;
+		this.time = time;
+		this.url = url;
 	}
 
 	public int getId() {
@@ -27,20 +32,21 @@ public class Cluster implements Comparator<Cluster> {
 	public void setDistance(double distance) {
 		this.distance = distance;
 	}
-
-	@Override
-	public int compare(Cluster obj1, Cluster obj2) {
-		// TODO Auto-generated method stub
-		// If the distanceToSearchImage is less than the next object return -1
-		if (obj1.distance < obj2.distance) {
-			return -1;
-		} else if (obj1.distance > obj2.distance) {
-			// Else if ...
-			return 1;
-		} else {
-			// Else...
-			return 0;
-		}
+	
+	public Date getTime() {
+		return time;
+	}
+	
+	public void setTime(Date time) {
+		 this.time = time;
+	}
+	
+	public String getUrl() {
+		return url;
+	}
+	
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 }
